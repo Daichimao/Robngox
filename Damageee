@@ -1,7 +1,130 @@
-echo "# Robngox" >> README.md
-git init
-git add README.md
-git commit -m "first commit"
-git branch -M main
-git remote add origin https://github.com/Daichimao/Robngox.git
-git push -u origin main
+"tok-kw">class SwordHunterDamageCalculator:
+ """
+ Menghitung damage total berdasarkan sistem multiplier Roblox Sword Hunter.
+ 
+ Formula umum yang digunakan dalam game此类:
+ Total Damage = Base Attack  (1 + Attack% Bonus)  (1 + Crit Chance %  Crit Multiplier)  Element Modifiers  Other Multipliers
+ 
+ Catatan: Ini adalah simulasi logika perkiraan. Logika pastinya tergantung pada versi update game.
+ """
+
+ "tok-kw">def __init__("tok-kw">self, base_attack: "tok-kw">float, attack_bonus_percent: "tok-kw">float = 0.0):
+ """
+ Inisialisasi kalkulator.
+ 
+ Args:
+ base_attack("tok-kw">float): Damage dasar senjata/hero.
+ attack_bonus_percent("tok-kw">float): Persentase bonus attack tambahan(contoh: 0.5 untuk +50%).
+ """
+ "tok-kw">self.base_attack = base_attack
+ "tok-kw">self.attack_bonus_percent = attack_bonus_percent
+
+ "tok-kw">def calculate_damage(
+ "tok-kw">self,
+ crit_chance_percent: "tok-kw">float = 0.0,
+ crit_multiplier: "tok-kw">float = 2.0,
+ element_multiplier: "tok-kw">float = 1.0,
+ other_multipliers: dict = "tok-kw">None
+ ) -> dict:
+ """
+ Menghitung damage normal dan damage kritis.
+ 
+ Args:
+ crit_chance_percent("tok-kw">float): Peluang kritikal(0.0 - 1.0). Contoh 0.25 berarti 25%.
+ crit_multiplier("tok-kw">float): Berapa kali lipat damage saat kritikal. Default 2x.
+ element_multiplier("tok-kw">float): Modifier elemen(api, es, dll). Default 1x.
+ other_multipliers(dict): Dictionary untuk multiplier lain(misal: boss weakness, status effect).
+ 
+ Returns:
+ dict: Dictionary berisi detail perhitungan(Normal Damage, Crit Damage, Total Expected Value).
+ """
+ "tok-kw">if other_multipliers "tok-kw">is "tok-kw">None:
+ other_multipliers = {}
+
+ # 1. Hitung Total Attack Stats
+ total_attack_mult = 1.0 + "tok-kw">self.attack_bonus_percent
+ effective_attack = "tok-kw">self.base_attack  total_attack_mult
+
+ # Terapkan multiplier elemen
+ effective_attack = element_multiplier
+
+ # Terapkan multiplier lainnya(jika ada)
+ "tok-kw">for key, value "tok-kw">in other_multipliers.items():
+ effective_attack = value
+
+ # 2. Hitung Normal Damage
+ normal_damage = effective_attack
+
+ # 3. Hitung Crit Damage
+ # Hanya dihitung jika crit chance > 0
+ "tok-kw">if crit_chance_percent > 0:
+ crit_damage = effective_attack  crit_multiplier
+ "tok-kw">else:
+ crit_damage = 0
+
+ # 4. Hitung Expected Damage(Rata-rata jangka panjang per hit)
+ # E[D] = (P(Crit)  D(Crit)) + (P(Normal)  D(Normal))
+ prob_crit = min(max(crit_chance_percent, 0.0), 1.0) # Clamp antara 0-1
+ prob_normal = 1.0 - prob_crit
+ 
+ expected_damage = (prob_crit  crit_damage) + (prob_normal  normal_damage)
+
+ "tok-kw">return {
+ "base_attack": "tok-kw">self.base_attack,
+ "total_attack_after_bonus": effective_attack,
+ "normal_damage": normal_damage,
+ "crit_damage": crit_damage,
+ "crit_chance_percent": crit_chance_percent  100,
+ "expected_damage": expected_damage
+ }
+
+"tok-kw">def main():
+ # --- KONFIGURASI CONTOH ---
+ # Misal: Hero memiliki Base Attack 500, dan mendapatkan buff Attack +50%
+ hero_base_atk = 500.0
+ atk_buff_percent = 0.50 # 50%
+
+ # Setup Kalkulator
+ calc = SwordHunterDamageCalculator(
+ base_attack=hero_base_atk,
+ attack_bonus_percent=atk_buff_percent
+ )
+
+ # --- SKENARIO 1: Serangan Normal(Tidak Kritikal) ---
+ # Asumsi: Tidak ada crit chance, elemen biasa(1x), tidak ada modifier lain
+ "tok-kw">print("--- Skenario 1: Serangan Dasar(Tanpa Crit) ---")
+ result_normal = calc.calculate_damage(
+ crit_chance_percent=0.0,
+ element_multiplier=1.0
+ )
+ "tok-kw">print(f"Base Attack: {result_normal[&#039;base_attack&#039;]}")
+ "tok-kw">print(f"Total Attack(Setelah Buff): {result_normal[&#039;total_attack_after_bonus&#039;]:.2f}")
+ "tok-kw">print(f"Damage Output: {result_normal[&#039;normal_damage&#039;]:.2f}\n")
+
+ # --- SKENARIO 2: Serangan Kritikal(Critical Hit) ---
+ # Asumsi: 30% chance kritikal, 2.5x multiplier kritikal, weak terhadap api(2x)
+ "tok-kw">print("--- Skenario 2: Critical Hit vs Weakness ---")
+ result_crit = calc.calculate_damage(
+ crit_chance_percent=0.30, # 30%
+ crit_multiplier=2.5, # 2.5x damage
+ element_multiplier=2.0, # 2x damage karena weakness api
+ other_multipliers={
+ "boss_weakness": 1.5, # Contoh tambahan: Boss lemah terhadap tipe tertentu(1.5x)
+ "status_burn": 1.2 # Contoh tambahan: Status burn(1.2x)
+ }
+ )
+ 
+ "tok-kw">print(f"Base Attack: {result_crit[&#039;base_attack&#039;]}")
+ "tok-kw">print(f"Total Attack(Setelah Buff & Elemen & Other): {result_crit[&#039;total_attack_after_bonus&#039;]:.2f}")
+ "tok-kw">print(f"Chance Kritikal: {result_crit[&#039;crit_chance_percent&#039;]}%")
+ "tok-kw">print(f"Damage Normal: {result_crit[&#039;normal_damage&#039;]:.2f}")
+ "tok-kw">print(f"Damage Kritikal: {result_crit[&#039;crit_damage&#039;]:.2f}")
+ "tok-kw">print(f"Expected Damage(Rata-rata): {result_crit[&#039;expected_damage&#039;]:.2f}\n")
+
+ # --- SKENARIO 3: Analisis Probabilitas ---
+ "tok-kw">print("--- Analisis Ekspektasi Damage ---")
+ "tok-kw">print(f"Jika Anda menyerang sekali, secara statistik Anda akan mendeal sekitar {result_crit[&#039;expected_damage&#039;]:.2f} damage.")
+ "tok-kw">print("Catatan: Ini adalah nilai harapan matematis, bukan jaminan damage per satu pukulan spesifik.")
+
+"tok-kw">if __name__ == "__main__":
+ main()
