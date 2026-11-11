@@ -1,0 +1,11 @@
+{
+  "name": "FlipCar_NFSMW_Mod",
+  "description": "Konsep mobil flip untuk game modding dengan vibe NFS Most Wanted",
+  "author": "Kamu",
+  "assets": {
+    "models": ["Assets/Models/flipcar_model.asset"],
+    "textures": ["Assets/Textures/flipcar_texture.png"],
+    "sounds": ["Sounds/EngineLaunch.wav"]
+  },
+  "scripts": ["LuaScripts/FlipMechanic.lua", "LuaScripts/Utility.lua"]
+}
